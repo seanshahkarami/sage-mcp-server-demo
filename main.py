@@ -4,6 +4,8 @@ from pydantic import Field
 from uuid import uuid4
 from dataclasses import dataclass
 
+# import argparse
+
 mcp = FastMCP("Sage MCP Server")
 
 
@@ -40,12 +42,29 @@ def deploy_sage_app(
         raise ValueError(
             "No nodes were provided. Please describe which nodes the app should be deployed to."
         )
+
+    # # HACK Validate specific test app arguments.
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument(
+    #     "--input",
+    #     type=str,
+    #     nargs=1,
+    #     required=True,
+    #     help="The camera to be used as input.",
+    # )
+    # args = parser.parse_args(args=args)
+
     # TODO Provide mechanism to check if any args are request but missing. This
     # suggets that we need to track this metadata in the app.
-    if "--input" not in args:
+    inputs = [arg for arg in args if arg.startswith("--input")]
+    if len(inputs) == 0:
         raise ValueError(
             "Argument --input is required. This app requires a camera to be provided as input as --input <camera_name>."
         )
+    if len(inputs) > 1:
+        raise ValueError("Argument --input must be provided exactly once.")
+
+    # Add deployment to database.
     app_uuid = str(uuid4())
     deployments[app_uuid] = Deployment(
         uuid=app_uuid,
